@@ -1,20 +1,7 @@
 import random
 import pandas as pd
 import inclusive_range
-
-def roll_1d(n):
-    roll = random.randint(1, n)
-    return roll
-
-def roll_nd(n,x):
-    rolls=[]
-
-    for i in range(0,n):
-        roll_i=roll_1d(x)
-        rolls.append(roll_i)
-
-    s=sum(rolls)
-    return [s,rolls]
+from roll import *
 
 ########################################
 #
@@ -23,7 +10,7 @@ def roll_nd(n,x):
 #
 #
 ########################################
-def get_occupation():
+def get_occupation_table():
 
     data={
         "1": ["Alchemist","Staff","Oil, 1 flask"],
@@ -81,7 +68,41 @@ def get_occupation():
         "98-100": [" Woodcutter"," Handaxe"," Bundle of wood"]}
 
     return data
-    
+
+def get_occupation():
+
+    score=roll_1d(100)
+
+    data=get_occupation_table()
+
+    for key,value in data.items():
+
+        ### we need to convert the key to a python range
+        range_i=inclusive_range.range_string_to_inclusive_integer_range(key)
+        
+
+        if score in range_i:
+            #print(f"key={key} = ",end='')
+            #print(f"value={value}")
+            
+            #print(f"score={score}")
+            #print(f"range_i={range_i}")
+
+
+            [occupation,trained_weapon,trade_goods]=value
+
+            result={}
+            result["Occupation"]=occupation
+            result["Trained Weapon"]=trained_weapon
+            result["Trade Goods"]=trade_goods
+            
+            return [result, score]
+
+
+        
+    return [{}, score]
+
+
 def get_random_equipment():
     data= {
         1: "Backpack",
@@ -110,7 +131,11 @@ def get_random_equipment():
         24:"Waterskin"}
 
     score=roll_1d(len(data))
-    return data[score]
+
+    result={}
+    result["Equipment"]=data[score]
+    
+    return [result, score]
 
 def get_birth_augur_and_lucky_roll():
 
@@ -146,10 +171,25 @@ def get_birth_augur_and_lucky_roll():
         29: ["Birdsong"," Number of languages"],
         30: ["Wild child"," Speed (each +1 = +5’ speed)"]}
 
-    score=roll_1d(len(data))
+
+    ### the table length should be 30
+    n_sides=len(data)    
+    assert(n_sides==30)
+
+
+    
+    score=roll_1d(n_sides)
+
+
+    
     [birth_augur, lucky_roll]=data[score]
 
-    return [birth_augur, lucky_roll]
+    result={}
+    result["Birth Augur"]=birth_augur
+    result["Lucky Roll"]=lucky_roll
+
+    
+    return [result, lucky_roll]
 
 
 def ability_score_to_modifier(score):
@@ -192,6 +232,36 @@ def ability_score_to_spells_known(score):
 
     return data[score]
 
+def roll_hp(df_ability_scores):
+
+    stamina_modifier=int(df_ability_scores["modifier"]["Stamina"])
+
+    [hp_roll,rolls]=roll("1d4")
+
+    hp=hp_roll+stamina_modifier
+
+    result={"hp": hp}
+  
+    return [result, hp_roll]
+
+def roll_copper():
+
+    [copper_roll,rolls]=roll("5d12")
+
+
+
+    result={"copper_pieces": copper_roll}
+  
+    return [result, copper_roll]
+
+def generate_fixed_values():
+    result={"XP": -100,
+            "Attack Modifier": 0,
+            "Save Modifier": 0,
+            "Level": 0}
+    
+  
+    return [result, 0]
 
 
 if __name__ == '__main__':
@@ -206,7 +276,7 @@ if __name__ == '__main__':
 
 
  
-     [score,rolls]=roll_nd(3,6)
+     [score,rolls]=roll("3d6")
 
      modifier=ability_score_to_modifier(score)
      spells_known=ability_score_to_spells_known(score)
@@ -221,6 +291,7 @@ if __name__ == '__main__':
      list_of_dicts.append(record_i)
 
  df_ability_scores=pd.DataFrame(list_of_dicts)
+ df_ability_scores.set_index("name",inplace=True)
 
  print(df_ability_scores)
 
@@ -228,13 +299,41 @@ if __name__ == '__main__':
  
  #luck_score=roll_1d(30)
 
+
+ misc_data={}
+ [hp_data,hp_roll]=roll_hp(df_ability_scores)
+
+ #print(f"hp_roll={hp_roll}")
+ misc_data.update(hp_data)
+
  
- [birth_augur,lucky_roll]=get_birth_augur_and_lucky_roll()
+ [birth_augur_data,lucky_roll]=get_birth_augur_and_lucky_roll()
+ misc_data.update(birth_augur_data)
+ # print(f"birth_augur_data={birth_augur_data}")
+ #print(f"lucky_roll={lucky_roll}")
 
- #print(f"luck_score={luck_score}", end="\t")
- print(f"birth_augur={birth_augur}")
- print(f"lucky_roll={lucky_roll}")
+ 
+
+ [equipment_data,equipment_roll]=get_random_equipment()
+ misc_data.update(equipment_data)
+ 
+ #print(f"equipment_data={equipment_data}")
+ #print(f"equipment_roll={equipment_roll}")
+
+ [occupation_data, occupation_score]=get_occupation()
+ #print(f"occupation_score={occupation_score}")
+
+ #print(f"occupation_data={occupation_data}")
+ [copper_data, copper_roll]=roll_copper()
+ misc_data.update(copper_data)
+
+ [fixed_value_data, fixed_value_score]=generate_fixed_values()
+
+ misc_data.update(fixed_value_data)
+ 
+ for key,value in misc_data.items():
+     print(f"{key} = \t",end='')
+     print(f"{value}")
 
 
- equipment=get_random_equipment()
- print(f"equipment={equipment}")
+ 

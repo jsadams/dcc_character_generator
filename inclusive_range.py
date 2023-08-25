@@ -18,8 +18,6 @@ def range_string_to_inclusive_integer_range(input_string):
     if match:
         start = int(match.group(1))
         end = int(match.group(2))
-        print("Start:", start)
-        print("End:", end)
     else:
         #print("No match found.")
         pattern = re.compile(r"(\d+)")
@@ -28,12 +26,13 @@ def range_string_to_inclusive_integer_range(input_string):
         if match:
             start = int(match.group(1))
             end = start
-            print("Start:", start)
-            print("End:", end)
 
         else:
             raise Exception(f"Can't parse input_string={input_string}")
 
+        
+    #print("Start:", start)
+    #print("End:", end)
 
     ## make range inclusive
     return range(start,end+1)
