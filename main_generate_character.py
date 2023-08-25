@@ -111,24 +111,24 @@ def get_random_equipment():
         4: "Chalk, 1 piece",
         5: "Chest, empty",
         6: "Crowbar",
-        7:"Flask, empty",
-        8:"Flint & steel",
-        9:"Grappling hook",
-        10:"Hammer, small",
-        11:"Holy symbol",
-        12:"Holy water, 1 vial**",
-        13:"Iron spikes, each",
-        14:"Lantern",
-        15:"Mirror, hand-sized",
-        16:"Oil, 1 flask***",
-        17:"Pole, 10-foot",
-        18:"Rations, per day",
-        19:"Rope, 50’",
-        20:"Sack, large",
-        21:"Sack, small",
-        22:"Thieves’ tools",
-        23:"Torch, each",
-        24:"Waterskin"}
+        7: "Flask, empty",
+        8: "Flint & steel",
+        9: "Grappling hook",
+        10: "Hammer, small",
+        11: "Holy symbol",
+        12: "Holy water, 1 vial**",
+        13: "Iron spikes, each",
+        14: "Lantern",
+        15: "Mirror, hand-sized",
+        16: "Oil, 1 flask***",
+        17: "Pole, 10-foot",
+        18: "Rations, per day",
+        19: "Rope, 50’",
+        20: "Sack, large",
+        21: "Sack, small",
+        22: "Thieves’ tools",
+        23: "Torch, each",
+        24: "Waterskin"}
 
     score=roll_1d(len(data))
 
@@ -136,6 +136,39 @@ def get_random_equipment():
     result["Equipment"]=data[score]
     
     return [result, score]
+
+def get_alignment():
+    data= {
+        1: "Chaotic",
+        2: "Neutral",
+        3: "Lawful",}
+
+    score=roll_1d(len(data))
+
+    result={}
+    result["Alignment"]=data[score]
+    
+    return [result, score]
+
+def get_sex():
+    data={
+        "1-47": "Male",
+        "48-95": "Female",
+        "96-100": "Non-Binary"}
+    
+    score=roll_1d(len(data))
+
+    result={}    
+    for key,value in data.items():
+        ### we need to convert the key to a python range
+        range_i=inclusive_range.range_string_to_inclusive_integer_range(key)   
+
+        if score in range_i:
+            result["Sex"]=value
+            return [result, score]
+    
+    return [result, score]
+
 
 def get_birth_augur_and_lucky_roll():
 
@@ -212,25 +245,72 @@ def ability_score_to_modifier(score):
 
     return data[score]
 
-def ability_score_to_spells_known(score):
-    data={ 3: -999,
-           4: -2,
-           5: -2,
-           6: -1,
-           7: -1,
-           8:  0,
-           9:  0,
-           10: 0,
-           11: 0,
-           12: 0,
-           13: 0,
-           14: 1,
-           15: 1,
-           16: 2,
-           17: 2,
-           18: 2}
+def ability_score_to_wizard_spells_known(score):
+    data={ 3: "No Spellcasting Possible",
+           4: "-2 Spells",
+           5: "-2 Spells",
+           6: "-1 Spells",
+           7: "-1 Spells",
+           8:  "No adjustment",
+           9:  "No adjustment",
+           10: "No adjustment",
+           11: "No adjustment",
+           12: "No adjustment",
+           13: "No adjustment",
+           14: "+1 Spell",
+           15: "+1 Spell",
+           16: "+2 Spells",
+           17: "+2 Spells",
+           18: "+2 Spells"}
 
     return data[score]
+
+def ability_score_to_max_spell_level(score):
+    data={ 3: "No Spellcasting Possible",
+           4: 1,
+           5: 1,
+           6: 1,
+           7: 1,
+           8:  2,
+           9:  2,
+           10: 3,
+           11: 3,
+           12: 4,
+           13: 4,
+           14: 5,
+           15: 5,
+           16: 6,
+           17: 6,
+           18: 7}
+
+    return data[score]
+
+def get_max_cleric_spell_level(df_ability_scores):
+
+    score=int(df_ability_scores["score"]["Personality"])
+
+    value=ability_score_to_max_spell_level(score)
+    result={"Max Cleric Spell Level": value}  
+    return [result, score]
+
+
+    
+def get_max_wizard_spell_level(df_ability_scores):
+
+    score=int(df_ability_scores["score"]["Intelligence"])
+
+    value=ability_score_to_max_spell_level(score)
+    result={"Max Wizard Spell Level": value}  
+    return [result, score]
+
+def get_wizard_spells_known(df_ability_scores):
+
+    score=int(df_ability_scores["score"]["Intelligence"])
+
+    value=ability_score_to_wizard_spells_known(score)
+    result={"Wizard Spells Known": value}  
+    return [result, score]
+
 
 def roll_hp(df_ability_scores):
 
@@ -250,7 +330,7 @@ def roll_copper():
 
 
 
-    result={"copper_pieces": copper_roll}
+    result={"Copper Pieces": copper_roll}
   
     return [result, copper_roll]
 
@@ -279,28 +359,54 @@ if __name__ == '__main__':
      [score,rolls]=roll("3d6")
 
      modifier=ability_score_to_modifier(score)
-     spells_known=ability_score_to_spells_known(score)
 
+     # if ability_i == "Intelligence":
+     #     wizard_spells_known=ability_score_to_wizard_spells_known(score)
+
+     # if ability_i == "Personality":
+     #     max_spell_level_cleric=ability_score_to_max_spell_level(score)
+
+     # if ability_i == "Intelligence" or ability_i == "Personality":
+     #     max_spell_level_wizard=ability_score_to_max_spell_level(score)
+         
+     #max_spell_level=ability_score_to_max_spell_level(score)
+
+     
      record_i={"name": ability_i,
                "score": score,              
                "modifier": modifier,
-               "spells_known":spells_known,
+               #"Wizard Spells Known":wizard_spells_known,
+               #"Max Spell Level":max_spell_level,
                 "rolls": rolls}
      
      
      list_of_dicts.append(record_i)
 
+
  df_ability_scores=pd.DataFrame(list_of_dicts)
  df_ability_scores.set_index("name",inplace=True)
-
  print(df_ability_scores)
 
  print("")
+
+ misc_data={}
+ 
+ # misc_data["wizard_spells_known"]=wizard_spells_known
+ # misc_data["max_spell_level_wizard"]=max_spell_level_wizard
+ # misc_data["max_spell_level_cleric"]=max_spell_level_cleric    
+ 
  
  #luck_score=roll_1d(30)
 
+ [data,rolls]=get_wizard_spells_known(df_ability_scores)
+ misc_data.update(data)
 
- misc_data={}
+ [data,rolls]=get_max_wizard_spell_level(df_ability_scores)
+ misc_data.update(data)
+ 
+ [data,rolls]=get_max_cleric_spell_level(df_ability_scores)
+ misc_data.update(data)
+ 
  [hp_data,hp_roll]=roll_hp(df_ability_scores)
 
  #print(f"hp_roll={hp_roll}")
@@ -322,18 +428,26 @@ if __name__ == '__main__':
 
  [occupation_data, occupation_score]=get_occupation()
  #print(f"occupation_score={occupation_score}")
-
+ misc_data.update(occupation_data)
+ 
  #print(f"occupation_data={occupation_data}")
  [copper_data, copper_roll]=roll_copper()
  misc_data.update(copper_data)
 
+ [alignment_data, alignment_roll]=get_alignment()
+ misc_data.update(alignment_data)
+
+ [sex_data, sex_roll]=get_sex()
+ misc_data.update(sex_data)
+
  [fixed_value_data, fixed_value_score]=generate_fixed_values()
 
  misc_data.update(fixed_value_data)
- 
- for key,value in misc_data.items():
-     print(f"{key} = \t",end='')
-     print(f"{value}")
+
+
+ ds_misc=pd.Series(misc_data)
+
+ print(f"{ds_misc}")
 
 
  
